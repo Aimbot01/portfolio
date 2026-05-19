@@ -837,6 +837,7 @@ footer p { font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospa
   </div>
 </footer>
 
+<script type="module" src="src/portfolio.js"></script>
 <script>
 // Cursor
 const cursor = document.getElementById('cursor');
@@ -866,6 +867,7 @@ window.addEventListener('scroll', () => {
 const observer = new IntersectionObserver(entries => {
   entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.15 });
+window.observer = observer;
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
 // Typing effect
