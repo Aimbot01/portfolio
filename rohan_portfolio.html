@@ -913,6 +913,7 @@ const lObserver = new IntersectionObserver(entries => {
     }
   });
 }, { threshold: 0.3 });
+window.lObserver = lObserver;
 document.querySelectorAll('.lang-bars').forEach(el => lObserver.observe(el));
 </script>
 </body>

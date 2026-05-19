@@ -63,3 +63,43 @@ export async function fetchProjects() {
     return [];
   }
 }
+
+/**
+ * Utility to fetch Rohan Yadav's general profile info from the GitHub API.
+ */
+export async function fetchProfile() {
+  try {
+    const headers = {
+      Accept: "application/vnd.github.v3+json",
+    };
+
+    // Safely check for a local config token
+    let token = null;
+    try {
+      const config = await import('../config.js').catch(() => null);
+      if (config && config.GITHUB_TOKEN) {
+        token = config.GITHUB_TOKEN;
+      }
+    } catch (e) {
+      // Fail silently if no local token config is provided
+    }
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(
+      "https://api.github.com/users/Aimbot01",
+      { headers }
+    );
+
+    if (!response.ok) {
+      throw new Error(`GitHub Profile error: ${response.status} ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching profile from GitHub:", error);
+    return null;
+  }
+}

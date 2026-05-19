@@ -1,4 +1,4 @@
-import { fetchProjects } from './utils/github.js';
+import { fetchProjects, fetchProfile } from './utils/github.js';
 
 // Map repo names or topics to emojis for visual excellence
 function getProjectEmoji(name, language) {
@@ -135,6 +135,91 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     projectsGrid.appendChild(card);
   });
+
+  // --- Dynamic GitHub Profile & Language Stats Enhancement ---
+  try {
+    const profile = await fetchProfile();
+    if (profile) {
+      // 1. Update Avatar image in the GitHub card
+      const avatarEl = document.querySelector('.gh-avatar');
+      if (avatarEl) {
+        avatarEl.outerHTML = `
+          <img src="${profile.avatar_url}" alt="${profile.login}" class="gh-avatar" style="
+            width: 80px; height: 80px; border-radius: 50%;
+            border: 2px solid var(--accent); object-fit: cover;
+            background: var(--surface2);
+          ">
+        `;
+      }
+
+      // 2. Update Stats (Public Repos count & stars summed up from fetched repos)
+      const totalStars = repos.reduce((acc, repo) => acc + (repo.stargazers_count || 0), 0);
+      const statsEl = document.querySelector('.gh-stats');
+      if (statsEl) {
+        statsEl.innerHTML = `
+          <div class="gh-stat"><div class="gh-stat-num">${profile.public_repos}</div><div class="gh-stat-label">Public Repos</div></div>
+          <div class="gh-stat"><div class="gh-stat-num">${totalStars}</div><div class="gh-stat-label">Total Stars</div></div>
+        `;
+      }
+    }
+  } catch (err) {
+    console.error("Error populating GitHub card details:", err);
+  }
+
+  // Calculate and render Language Breakdown dynamically
+  try {
+    const languageCounts = {};
+    let totalLanguages = 0;
+    
+    // Process languages from all repos (excluding the profile readme) for accuracy
+    repos.forEach(repo => {
+      if (repo.language) {
+        languageCounts[repo.language] = (languageCounts[repo.language] || 0) + 1;
+        totalLanguages++;
+      }
+    });
+
+    if (totalLanguages > 0) {
+      const languagePercentages = Object.entries(languageCounts).map(([lang, count]) => ({
+        name: lang,
+        percentage: Math.round((count / totalLanguages) * 100)
+      })).sort((a, b) => b.percentage - a.percentage);
+
+      const languageColors = {
+        JavaScript: 'linear-gradient(90deg, #f7df1e, #e0c800)',
+        CSS: 'linear-gradient(90deg, #264de4, #4b7ff7)',
+        HTML: 'linear-gradient(90deg, #e34f26, #f06529)',
+        Java: 'linear-gradient(90deg, #ed8b00, #f5a623)',
+        Python: 'linear-gradient(90deg, #3776ab, #ffd343)',
+        C: 'linear-gradient(90deg, #a8b9cc, #555555)',
+        SQL: 'linear-gradient(90deg, #00758f, #f29111)',
+      };
+      const defaultColor = 'linear-gradient(90deg, var(--accent), var(--accent2))';
+
+      const langBars = document.querySelector('.lang-bars');
+      if (langBars) {
+        langBars.innerHTML = languagePercentages.map(lang => {
+          const color = languageColors[lang.name] || defaultColor;
+          return `
+            <div class="lang-bar-item">
+              <span class="lang-name">${lang.name}</span>
+              <div class="lang-track">
+                <div class="lang-fill" style="width:0%; background:${color};" data-w="${lang.percentage}"></div>
+              </div>
+              <span class="lang-pct">${lang.percentage}%</span>
+            </div>
+          `;
+        }).join('');
+
+        // Re-trigger scroll reveal observer for language progress fill
+        if (window.lObserver) {
+          window.lObserver.observe(langBars);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error populating language breakdown:", err);
+  }
 
   // Re-observe the dynamically created reveal elements for smooth scroll reveal
   const scrollObserver = window.observer || new IntersectionObserver(entries => {
