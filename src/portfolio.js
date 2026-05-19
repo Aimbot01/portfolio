@@ -60,6 +60,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Clear loader and populate projects
   projectsGrid.innerHTML = '';
 
+  // Dynamically update project count statistics across the portfolio
+  const projectCount = repos.length;
+  const builtStat = document.querySelector('.hero-stats .stat:first-child .stat-num');
+  const shippedCounter = document.querySelector('.counters .counter-card:first-child .counter-num');
+  
+  if (builtStat) {
+    builtStat.dataset.target = projectCount;
+    builtStat.textContent = projectCount;
+  }
+  if (shippedCounter) {
+    shippedCounter.dataset.target = projectCount;
+    shippedCounter.textContent = projectCount;
+  }
+
   repos.forEach((repo, index) => {
     const emoji = getProjectEmoji(repo.name, repo.language);
     const updatedDate = new Date(repo.updated_at).toLocaleDateString('en-US', {
